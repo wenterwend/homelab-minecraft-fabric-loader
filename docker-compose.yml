@@ -1,0 +1,13 @@
+services:
+  mod-manager:
+    build: .
+    container_name: fabric-mod-manager
+    ports:
+      - '3001:3001'
+    environment:
+      PORT: 3001
+      MODS_DIR: /mods
+      MINECRAFT_VERSION: 1.21
+    volumes:
+      - ~/appdata/minecraft-fabric/mods:/mods
+    restart: unless-stopped

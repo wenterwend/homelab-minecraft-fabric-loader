@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { api } from './lib/api'
 import type { InstalledMod, ModVersion, SearchResult } from './types'
+import { RestartServerBanner } from './components/RestartServerBanner'
 
 type AsyncState = 'idle' | 'loading'
 
@@ -20,6 +21,7 @@ function App() {
   const [busyProjectId, setBusyProjectId] = useState<string | null>(null)
   const [busyFileName, setBusyFileName] = useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [isRestartRequired, setIsRestartRequired] = useState(false)
 
   const installedFileNames = useMemo(
     () =>
@@ -137,6 +139,7 @@ function App() {
         versionNumber: selectedVersion.versionNumber,
       })
       await refreshInstalledMods()
+      setIsRestartRequired(true)
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Failed to install mod.')
     } finally {
@@ -165,6 +168,7 @@ function App() {
     try {
       await api.deleteMod(fileName)
       await refreshInstalledMods()
+      setIsRestartRequired(true)
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Failed to delete mod.')
     } finally {
@@ -185,6 +189,12 @@ function App() {
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.24),_transparent_34%),linear-gradient(180deg,_#08120f_0%,_#10221b_52%,_#07110d_100%)] px-4 py-8 text-stone-100 sm:px-6 lg:px-8">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
+        {isRestartRequired && (
+          <RestartServerBanner
+            onRestartSuccess={() => setIsRestartRequired(false)}
+            onRestartError={(error) => setErrorMessage(error)}
+          />
+        )}
         <section className="overflow-hidden rounded-[2rem] border border-emerald-500/20 bg-black/25 shadow-2xl shadow-emerald-950/40 backdrop-blur">
           <div className="grid gap-8 px-6 py-8 lg:grid-cols-[1.35fr_0.9fr] lg:px-10 lg:py-10">
             <div className="space-y-5">

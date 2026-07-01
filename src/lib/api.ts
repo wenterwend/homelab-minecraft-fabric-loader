@@ -51,4 +51,8 @@ export const api = {
     request<void>(`/api/mods/${encodeURIComponent(fileName)}`, {
       method: 'DELETE',
     }),
+  restartServer: () =>
+    request<{ ok: boolean; message: string }>('/api/server/restart', {
+      method: 'POST',
+    }),
 }

@@ -2,10 +2,12 @@ import axios from 'axios'
 import cors from 'cors'
 import express from 'express'
 import type { Request, Response } from 'express'
+import { exec } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
 import { pipeline } from 'node:stream/promises'
 import { fileURLToPath } from 'node:url'
+import { promisify } from 'node:util'
 
 const app = express()
 const port = Number(process.env.PORT ?? 3001)
@@ -294,6 +296,17 @@ app.delete('/api/mods/:fileName', async (request: Request, response: Response) =
     response.status(204).send()
   } catch {
     response.status(500).json({ error: 'Failed to delete mod.' })
+  }
+})
+
+app.post('/api/server/restart', async (_request: Request, response: Response) => {
+  try {
+    const execAsync = promisify(exec)
+    await execAsync('docker restart minecraft-fabric')
+    response.json({ ok: true, message: 'Server restart initiated.' })
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Failed to restart server.'
+    response.status(500).json({ error: message })
   }
 })
 

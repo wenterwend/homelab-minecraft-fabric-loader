@@ -1,4 +1,4 @@
-FROM node:22-alpine
+FROM node:22-slim
 
 RUN apt-get update && apt-get install -y \
     ca-certificates \
@@ -17,7 +17,7 @@ ENV MODS_DIR=/mods
 ENV MINECRAFT_VERSION=1.21.1
 
 COPY package*.json ./
-RUN npm ci --include=dev
+RUN npm install
 
 COPY . .
 RUN npm run build

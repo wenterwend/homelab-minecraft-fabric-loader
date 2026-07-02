@@ -281,6 +281,23 @@ app.post('/api/mods/toggle', async (request: Request, response: Response) => {
   }
 })
 
+app.get('/api/mods/:fileName/download', async (request: Request, response: Response) => {
+  try {
+    const rawFileName = request.params.fileName
+    const fileName = decodeURIComponent(Array.isArray(rawFileName) ? rawFileName[0] : rawFileName)
+    const targetPath = await resolveExistingModPath(fileName)
+
+    if (!targetPath) {
+      response.status(404).json({ error: 'Mod file not found.' })
+      return
+    }
+
+    response.download(targetPath, normalizeDisplayName(fileName))
+  } catch {
+    response.status(500).json({ error: 'Failed to download mod.' })
+  }
+})
+
 app.delete('/api/mods/:fileName', async (request: Request, response: Response) => {
   try {
     const rawFileName = request.params.fileName

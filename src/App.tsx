@@ -4,11 +4,13 @@ import type { InstalledMod, ModVersion, SearchResult } from './types'
 import { RestartServerBanner } from './components/RestartServerBanner'
 
 type AsyncState = 'idle' | 'loading'
+type SortOption = 'relevance' | 'downloads-desc' | 'name-asc'
 
 function App() {
   const [query, setQuery] = useState('sodium')
   const [draftQuery, setDraftQuery] = useState('sodium')
   const [page, setPage] = useState(1)
+  const [sortOption, setSortOption] = useState<SortOption>('relevance')
   const [searchResults, setSearchResults] = useState<SearchResult[]>([])
   const [searchTotal, setSearchTotal] = useState(0)
   const [installedMods, setInstalledMods] = useState<InstalledMod[]>([])
@@ -33,6 +35,22 @@ function App() {
       ),
     [installedMods],
   )
+
+  const sortedSearchResults = useMemo(() => {
+    if (sortOption === 'relevance') {
+      return searchResults
+    }
+
+    const sorted = [...searchResults]
+
+    if (sortOption === 'downloads-desc') {
+      sorted.sort((left, right) => right.downloads - left.downloads)
+    } else {
+      sorted.sort((left, right) => left.title.localeCompare(right.title))
+    }
+
+    return sorted
+  }, [searchResults, sortOption])
 
   const loadInstalledMods = async () => {
     try {
@@ -256,16 +274,31 @@ function App() {
 
         <section className="grid gap-6 lg:grid-cols-[1.25fr_0.95fr]">
           <div className="rounded-[2rem] border border-white/10 bg-black/25 p-5 backdrop-blur">
-            <div className="mb-5 flex items-end justify-between gap-4">
+            <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
               <div>
                 <p className="text-xs uppercase tracking-[0.28em] text-cyan-200/75">Browse Modrinth</p>
                 <h2 className="mt-2 font-[Georgia] text-2xl text-white">Installable Fabric mods</h2>
               </div>
-              <p className="text-sm text-stone-400">Page {page} of {totalPages}</p>
+              <div className="flex items-center gap-3">
+                <label htmlFor="sort-select" className="text-xs uppercase tracking-[0.2em] text-stone-400">
+                  Sort by
+                </label>
+                <select
+                  id="sort-select"
+                  value={sortOption}
+                  onChange={(event) => setSortOption(event.target.value as SortOption)}
+                  className="rounded-full border border-white/10 bg-black/30 px-4 py-2 text-sm text-white outline-none focus:border-emerald-400"
+                >
+                  <option value="relevance">Relevance</option>
+                  <option value="downloads-desc">Downloads</option>
+                  <option value="name-asc">Name (A-Z)</option>
+                </select>
+                <p className="text-sm text-stone-400">Page {page} of {totalPages}</p>
+              </div>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
-              {searchResults.map((result) => {
+              {sortedSearchResults.map((result) => {
                 const hasInstalledVersion = installedMods.some((mod) =>
                   mod.displayName.toLowerCase().includes(result.slug.toLowerCase()),
                 )
@@ -375,6 +408,13 @@ function App() {
                     >
                       {busyFileName === mod.fileName ? 'Working...' : mod.status === 'active' ? 'Disable' : 'Enable'}
                     </button>
+                    <a
+                      href={api.getModDownloadUrl(mod.fileName)}
+                      download
+                      className="rounded-full border border-cyan-300/25 bg-cyan-400/15 px-4 py-2 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-400/25"
+                    >
+                      Download
+                    </a>
                     <button
                       type="button"
                       onClick={() => void handleDelete(mod.fileName)}

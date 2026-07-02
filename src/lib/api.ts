@@ -51,6 +51,8 @@ export const api = {
     request<void>(`/api/mods/${encodeURIComponent(fileName)}`, {
       method: 'DELETE',
     }),
+  getModDownloadUrl: (fileName: string) =>
+    `${apiBaseUrl}/api/mods/${encodeURIComponent(fileName)}/download`,
   restartServer: () =>
     request<{ ok: boolean; message: string }>('/api/server/restart', {
       method: 'POST',
